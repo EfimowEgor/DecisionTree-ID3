@@ -1,5 +1,8 @@
 from typing import Any, Optional, List
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import (f1_score, 
+                             accuracy_score)
 import numpy as np
 import pandas as pd
 from graphviz import Digraph
@@ -92,7 +95,6 @@ class DecisionTreeID3(BaseEstimator, ClassifierMixin):
 
     def predict(self, X: np.ndarray) -> List[Any]:
         predictions = []
-        # TODO: Добавить адекватную обработку отсутствующих классов
         for instance in X:
             node = self.tree
             while node.class_label is None:
@@ -102,9 +104,11 @@ class DecisionTreeID3(BaseEstimator, ClassifierMixin):
                     if val == feature_val:
                         node = child
                         found_child = True
-                        break 
+                        break
                 if not found_child:
-                    break 
+                    class_counts = np.unique(self.y[self.X[:, node.feature_idx] == feature_val], return_counts=True)
+                    node.class_label = class_counts[0][np.argmax(class_counts[1])]
+                    break
             predictions.append(node.class_label)
         return predictions
 
@@ -171,7 +175,7 @@ class DecisionTreeID3(BaseEstimator, ClassifierMixin):
 
 
 if __name__ == "__main__":
-    # Пример использования
+        # Пример использования
     df = pd.read_excel("./P4/Credits.xlsx")
 
     X = df.drop(columns="risk", axis=1).values
